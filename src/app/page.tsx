@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { getUserProfile, getCalendarEvents } from '@/lib/api';
+import { getServiceConfig } from '@/lib/config';
 
 function DashboardLoader() {
   const searchParams = useSearchParams();
@@ -31,12 +32,13 @@ function DashboardLoader() {
         console.log("NuMi Dashboard: Fetching calendar snapshot from Firestore...");
         let calInfo = await getCalendarEvents(userId);
         
-        // 2. Attempt Live Calendar sync from port 3000 (CORS required)
+        // 2. Attempt Live Calendar sync from signup service (dynamic URL)
         try {
-           console.log("NuMi Dashboard: Attempting live calendar fetch from port 3000...");
-           const liveCalRes = await fetch(`http://localhost:3000/api/calendar/events?userId=${userId}`, { 
+           const serviceConfig = await getServiceConfig();
+           const signupUrl = serviceConfig.signupUrl;
+           console.log("NuMi Dashboard: Attempting live calendar fetch from:", signupUrl);
+           const liveCalRes = await fetch(`${signupUrl}/api/calendar/events?userId=${userId}`, { 
              credentials: 'include',
-             // Adding a short timeout specifically for this 3000 fetch so it doesn't hang the whole dashboard
            });
            
            if(liveCalRes.ok) {
